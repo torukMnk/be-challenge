@@ -1,4 +1,4 @@
-class CreateTransaction < ActiveRecord::Migration[6.0]
+class CreateTransactions < ActiveRecord::Migration[6.0]
   create_table :transactions, id: false do |t|
     t.string  :id, primary_key: true, null: false
     t.string :intent_id, null: false

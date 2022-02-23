@@ -1,6 +1,6 @@
 require_relative 'config/application'
 
-class app < Sinatra::Base
+class App < Sinatra::Base
   
   get "/" do
   	erb :index
