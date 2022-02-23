@@ -1,5 +1,4 @@
 require 'securerandom'
-
 class Transaction < ActiveRecord::Base
 
   VALID_STATUSES = %w(PENDING PAID REFUNDED PARTIALLY_REFUNDED VOID).freeze
