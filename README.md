@@ -15,5 +15,5 @@
 4. Run `rake db:create` and `rake db:migrate RACK_ENV=test`
 5. Run `rake spec` and ensure there are no failing tests. 
 6. Visit https://be-challenge-api.herokuapp.com/
-7. Follow the on screen instructions to create a user, recieve a token and conencto to the API.
+7. Follow the on screen instructions to create a user, recieve a token and conenct to the API.
 8. Use any means you see fit to accomplish the objective outlined above. 
