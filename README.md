@@ -15,10 +15,11 @@
 3. Run `bundle install`
 4. Run `rake db:create` and `rake db:migrate RACK_ENV=test`
 5. Run `rake spec` and ensure there are no failing tests.
-6. Visit [https://be-challenge-uqjcnl577q-pd.a.run.app/](https://be-challenge-uqjcnl577q-pd.a.run.app/)
-7. Follow the on screen instructions to create a user, receive a token and connect to the API.
-8. Use any means you see fit to accomplish the objective outlined above.
-9. You may use `irb` and `require './app.rb'` to have a working console with the application loaded.
+6. Create a commit with the message "Start time"
+7. Visit [https://be-challenge-uqjcnl577q-pd.a.run.app/](https://be-challenge-uqjcnl577q-pd.a.run.app/)
+8. Follow the on screen instructions to create a user, receive a token and connect to the API.
+9. Use any means you see fit to accomplish the objective outlined above.
+10. You may use `irb` and `require './app.rb'` to have a working console with the application loaded.
 
 
 ### Notes
