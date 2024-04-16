@@ -1,0 +1,493 @@
+From 146efbe4268e5af2919c2cfaa21a215945371632 Mon Sep 17 00:00:00 2001
+From: Adan Alvarado <adan.alvarado7@gmail.com>
+Date: Thu, 30 Jun 2022 12:09:33 -0700
+Subject: [PATCH 1/4] Initial commit for my project submission
+
+- Created the `services/report_fetcher.rb` file that internally uses the
+  `Net::HTTP` library to fetch reports from the Galactic Comerce Corp
+  app.
+
+- Added `README-adan.md` to document progress and explanations to code
+  added.
+---
+ Gemfile                                       |  3 +-
+ Gemfile.lock                                  |  4 +-
+ README-adan.md                                | 10 +++++
+ .../reports/galactic_commerce/csv_adapter.rb  |  0
+ .../reports/galactic_commerce/json_adapter.rb |  0
+ .../reports/galactic_commerce/xml_adapter.rb  |  0
+ app.rb                                        |  3 +-
+ db/schema.rb                                  |  7 ++--
+ services/report_fetcher.rb                    | 41 +++++++++++++++++++
+ 9 files changed, 61 insertions(+), 7 deletions(-)
+ create mode 100644 README-adan.md
+ create mode 100644 adapters/reports/galactic_commerce/csv_adapter.rb
+ create mode 100644 adapters/reports/galactic_commerce/json_adapter.rb
+ create mode 100644 adapters/reports/galactic_commerce/xml_adapter.rb
+ create mode 100644 services/report_fetcher.rb
+
+diff --git a/Gemfile b/Gemfile
+index 8dda66e..2ba137d 100644
+--- a/Gemfile
++++ b/Gemfile
+@@ -16,4 +16,5 @@ end
+ group :development, :test do
+   # Use SQLite for ActiveRecord
+   gem 'sqlite3'
+-end
+\ No newline at end of file
++end
++gem "hashie", "~> 5.0"
+diff --git a/Gemfile.lock b/Gemfile.lock
+index b842fcc..0526059 100644
+--- a/Gemfile.lock
++++ b/Gemfile.lock
+@@ -15,6 +15,7 @@ GEM
+     byebug (11.1.3)
+     concurrent-ruby (1.1.9)
+     diff-lcs (1.5.0)
++    hashie (5.0.0)
+     i18n (1.10.0)
+       concurrent-ruby (~> 1.0)
+     minitest (5.15.0)
+@@ -67,6 +68,7 @@ PLATFORMS
+ 
+ DEPENDENCIES
+   byebug
++  hashie (~> 5.0)
+   pg
+   rack-test
+   rake
+@@ -77,4 +79,4 @@ DEPENDENCIES
+   sqlite3
+ 
+ BUNDLED WITH
+-   2.0.2
++   2.1.4
+diff --git a/README-adan.md b/README-adan.md
+new file mode 100644
+index 0000000..a7e15a6
+--- /dev/null
++++ b/README-adan.md
+@@ -0,0 +1,10 @@
++Hey Reviewers,
++
++After our call I focused on simplifying how request were being built and a way to pass the login information to the login endpoint in a more convenient way.
++
++I was able to obtain a response from both the report summary and each individual report.
++
++For next steps, An Adapter Pattern with the gem Hashie would work here. 
++
++- Get the JSON response and initialize them with `Hashie::Mash`
++- Create a class for each format type (json, xml, csv) that handles translating transactions into a common format for the ActiveRecord object that will store the results
+diff --git a/adapters/reports/galactic_commerce/csv_adapter.rb b/adapters/reports/galactic_commerce/csv_adapter.rb
+new file mode 100644
+index 0000000..e69de29
+diff --git a/adapters/reports/galactic_commerce/json_adapter.rb b/adapters/reports/galactic_commerce/json_adapter.rb
+new file mode 100644
+index 0000000..e69de29
+diff --git a/adapters/reports/galactic_commerce/xml_adapter.rb b/adapters/reports/galactic_commerce/xml_adapter.rb
+new file mode 100644
+index 0000000..e69de29
+diff --git a/app.rb b/app.rb
+index 32b7057..8d31451 100644
+--- a/app.rb
++++ b/app.rb
+@@ -1,4 +1,5 @@
+ require_relative 'config/application'
++require 'net/http'
+ 
+ class App < Sinatra::Base
+   
+@@ -6,4 +7,4 @@ class App < Sinatra::Base
+   	erb :index
+   end
+ 
+-end
+\ No newline at end of file
++end
+diff --git a/db/schema.rb b/db/schema.rb
+index b710433..522c611 100644
+--- a/db/schema.rb
++++ b/db/schema.rb
+@@ -10,8 +10,7 @@
+ #
+ # It's strongly recommended that you check this file into your version control system.
+ 
+-ActiveRecord::Schema.define(version: 2020_04_04_175228) do
+-
++ActiveRecord::Schema[7.0].define(version: 2020_04_04_175228) do
+   create_table "transactions", id: :string, force: :cascade do |t|
+     t.string "intent_id", null: false
+     t.string "external_id"
+@@ -19,8 +18,8 @@ ActiveRecord::Schema.define(version: 2020_04_04_175228) do
+     t.string "currency", null: false
+     t.datetime "paid_at"
+     t.string "status", null: false
+-    t.datetime "created_at", precision: 6, null: false
+-    t.datetime "updated_at", precision: 6, null: false
++    t.datetime "created_at", null: false
++    t.datetime "updated_at", null: false
+     t.index ["external_id"], name: "index_transactions_on_external_id", unique: true
+   end
+ 
+diff --git a/services/report_fetcher.rb b/services/report_fetcher.rb
+new file mode 100644
+index 0000000..b8625f2
+--- /dev/null
++++ b/services/report_fetcher.rb
+@@ -0,0 +1,41 @@
++require 'net/http'
++require 'json'
++
++class ReportFetcher
++  BASE_URL = "https://be-challenge-api.herokuapp.com"
++
++  def initialize
++    @uri = URI(BASE_URL)
++    @token = nil
++  end
++
++  def authenticate(email, password)
++    res = Net::HTTP.post URI(BASE_URL + '/login'),
++      { email: email, password: password }.to_json,
++      "Content-Type" => "application/json"
++
++    @token = JSON.load(res.body)['token']
++    @token
++  end
++
++  def reports
++    raise StandardError.new('Token missing. Users must authenticate first') unless @token
++
++    JSON.load(get_request_body('reports'))
++  end
++
++  def get_request_body(endpoint)
++    req = Net::HTTP::Get.new(@uri + endpoint)
++    req["Authorization"] = "Bearer #{@token}"
++
++    res = Net::HTTP.start(@uri.host, @uri.port, use_ssl: true) do |http|
++      http.request(req)
++    end
++
++    res.body
++  end
++
++  def report(id)
++    get_request_body("/reports/#{id}")
++  end
++end
+-- 
+2.34.1
+
+
+From 3251b0b37ee46d4449da9233cfc9201ef7f4f7b6 Mon Sep 17 00:00:00 2001
+From: Adan Alvarado <adan.alvarado7@gmail.com>
+Date: Thu, 30 Jun 2022 14:11:40 -0700
+Subject: [PATCH 2/4] Adapters are being loaded with hashes from response
+
+- Added dependencies for loading hashes from xml
+- Added Pry for easier debugging
+---
+ Gemfile                                       |  1 +
+ Gemfile.lock                                  | 12 ++++++
+ README-adan.md                                |  2 +-
+ .../reports/galactic_commerce/csv_adapter.rb  |  8 ++++
+ .../reports/galactic_commerce/json_adapter.rb |  8 ++++
+ .../reports/galactic_commerce/xml_adapter.rb  |  8 ++++
+ services/report_fetcher.rb                    | 39 +++++++++++++++++--
+ 7 files changed, 74 insertions(+), 4 deletions(-)
+
+diff --git a/Gemfile b/Gemfile
+index 2ba137d..fcdc869 100644
+--- a/Gemfile
++++ b/Gemfile
+@@ -16,5 +16,6 @@ end
+ group :development, :test do
+   # Use SQLite for ActiveRecord
+   gem 'sqlite3'
++  gem 'pry'
+ end
+ gem "hashie", "~> 5.0"
+diff --git a/Gemfile.lock b/Gemfile.lock
+index 0526059..11090c5 100644
+--- a/Gemfile.lock
++++ b/Gemfile.lock
+@@ -13,16 +13,26 @@ GEM
+       tzinfo (~> 2.0)
+       zeitwerk (~> 2.3)
+     byebug (11.1.3)
++    coderay (1.1.3)
+     concurrent-ruby (1.1.9)
+     diff-lcs (1.5.0)
+     hashie (5.0.0)
+     i18n (1.10.0)
+       concurrent-ruby (~> 1.0)
++    method_source (1.0.0)
++    mini_portile2 (2.8.0)
+     minitest (5.15.0)
+     multi_json (1.15.0)
+     mustermann (1.1.1)
+       ruby2_keywords (~> 0.0.1)
++    nokogiri (1.13.6)
++      mini_portile2 (~> 2.8.0)
++      racc (~> 1.4)
+     pg (1.3.3)
++    pry (0.14.1)
++      coderay (~> 1.1)
++      method_source (~> 1.0)
++    racc (1.6.0)
+     rack (2.2.3)
+     rack-protection (2.2.0)
+       rack
+@@ -69,7 +79,9 @@ PLATFORMS
+ DEPENDENCIES
+   byebug
+   hashie (~> 5.0)
++  nokogiri (~> 1.13)
+   pg
++  pry
+   rack-test
+   rake
+   rspec
+diff --git a/README-adan.md b/README-adan.md
+index a7e15a6..876e1fc 100644
+--- a/README-adan.md
++++ b/README-adan.md
+@@ -5,6 +5,6 @@ After our call I focused on simplifying how request were being built and a way t
+ I was able to obtain a response from both the report summary and each individual report.
+ 
+ For next steps, An Adapter Pattern with the gem Hashie would work here. 
+-
++- Install the Hashie gem. `bundler add hashie`
+ - Get the JSON response and initialize them with `Hashie::Mash`
+ - Create a class for each format type (json, xml, csv) that handles translating transactions into a common format for the ActiveRecord object that will store the results
+diff --git a/adapters/reports/galactic_commerce/csv_adapter.rb b/adapters/reports/galactic_commerce/csv_adapter.rb
+index e69de29..b52e786 100644
+--- a/adapters/reports/galactic_commerce/csv_adapter.rb
++++ b/adapters/reports/galactic_commerce/csv_adapter.rb
+@@ -0,0 +1,8 @@
++module Adapters
++  module Reports
++    module GalacticCommerce
++      class CsvAdapter < Hash
++      end
++    end
++  end
++end
+diff --git a/adapters/reports/galactic_commerce/json_adapter.rb b/adapters/reports/galactic_commerce/json_adapter.rb
+index e69de29..c067cda 100644
+--- a/adapters/reports/galactic_commerce/json_adapter.rb
++++ b/adapters/reports/galactic_commerce/json_adapter.rb
+@@ -0,0 +1,8 @@
++module Adapters
++  module Reports
++    module GalacticCommerce
++      class JsonAdapter < Hash
++      end
++    end
++  end
++end
+diff --git a/adapters/reports/galactic_commerce/xml_adapter.rb b/adapters/reports/galactic_commerce/xml_adapter.rb
+index e69de29..95f4090 100644
+--- a/adapters/reports/galactic_commerce/xml_adapter.rb
++++ b/adapters/reports/galactic_commerce/xml_adapter.rb
+@@ -0,0 +1,8 @@
++module Adapters
++  module Reports
++    module GalacticCommerce
++      class XmlAdapter < Hash
++      end
++    end
++  end
++end
+diff --git a/services/report_fetcher.rb b/services/report_fetcher.rb
+index b8625f2..5e29d74 100644
+--- a/services/report_fetcher.rb
++++ b/services/report_fetcher.rb
+@@ -1,5 +1,18 @@
+ require 'net/http'
+ require 'json'
++require 'hashie'
++require_relative '../adapters/reports/galactic_commerce/csv_adapter'
++require_relative '../adapters/reports/galactic_commerce/json_adapter'
++require_relative '../adapters/reports/galactic_commerce/xml_adapter'
++require 'csv'
++
++# provides Hash.from_xml
++require 'active_support/core_ext'
++
++require 'pry'
++
++# This avoids typing the Full module/class name
++include Adapters::Reports::GalacticCommerce
+ 
+ class ReportFetcher
+   BASE_URL = "https://be-challenge-api.herokuapp.com"
+@@ -21,7 +34,14 @@ class ReportFetcher
+   def reports
+     raise StandardError.new('Token missing. Users must authenticate first') unless @token
+ 
+-    JSON.load(get_request_body('reports'))
++    reports_resp = JSON.load(get_request_body('reports'))
++
++     reports_resp.reduce([]) do |acc, rep|
++      rep = ::Hashie::Mash.new(rep)
++
++      acc.concat report(rep.report_id, rep.format)
++      acc
++    end
+   end
+ 
+   def get_request_body(endpoint)
+@@ -35,7 +55,20 @@ class ReportFetcher
+     res.body
+   end
+ 
+-  def report(id)
+-    get_request_body("/reports/#{id}")
++  def report(id, format)
++    report_adapter(format, get_request_body("/reports/#{id}"))
++  end
++  
++  def report_adapter(format, body)
++    case format
++    when 'json'
++      return JSON.load(body).map{|r| JsonAdapter[r] }
++    when 'csv'
++      return CSV.parse(body, headers: true).map{|r| CsvAdapter[r] }
++    when 'xml'
++      return Hash.from_xml(body)['report']['transaction'].map { |r| XmlAdapter[r] }
++    else
++      raise StandardError.new("No Adapter available for format: #{format}")
++    end
+   end
+ end
+-- 
+2.34.1
+
+
+From a52562c5b035a2008c38135963ec43675b80396c Mon Sep 17 00:00:00 2001
+From: Adan Alvarado <adan.alvarado7@gmail.com>
+Date: Thu, 30 Jun 2022 15:08:27 -0700
+Subject: [PATCH 3/4] Properties are translated now
+
+---
+ adapters/reports/galactic_commerce/csv_adapter.rb  | 7 ++++++-
+ adapters/reports/galactic_commerce/json_adapter.rb | 7 ++++++-
+ adapters/reports/galactic_commerce/xml_adapter.rb  | 7 ++++++-
+ services/report_fetcher.rb                         | 7 ++++---
+ 4 files changed, 22 insertions(+), 6 deletions(-)
+
+diff --git a/adapters/reports/galactic_commerce/csv_adapter.rb b/adapters/reports/galactic_commerce/csv_adapter.rb
+index b52e786..4d42629 100644
+--- a/adapters/reports/galactic_commerce/csv_adapter.rb
++++ b/adapters/reports/galactic_commerce/csv_adapter.rb
+@@ -1,7 +1,12 @@
+ module Adapters
+   module Reports
+     module GalacticCommerce
+-      class CsvAdapter < Hash
++      class CsvAdapter < Hashie::Trash
++        include Hashie::Extensions::IgnoreUndeclared
++        include Hashie::Extensions::SymbolizeKeys
++        include Hashie::Extensions::IndifferentAccess
++
++        property :id, from: :account_external_ref
+       end
+     end
+   end
+diff --git a/adapters/reports/galactic_commerce/json_adapter.rb b/adapters/reports/galactic_commerce/json_adapter.rb
+index c067cda..6375fde 100644
+--- a/adapters/reports/galactic_commerce/json_adapter.rb
++++ b/adapters/reports/galactic_commerce/json_adapter.rb
+@@ -1,7 +1,12 @@
+ module Adapters
+   module Reports
+     module GalacticCommerce
+-      class JsonAdapter < Hash
++      class JsonAdapter < Hashie::Trash
++        include Hashie::Extensions::IgnoreUndeclared
++        include Hashie::Extensions::IndifferentAccess
++        include Hashie::Extensions::SymbolizeKeys
++
++        property :id, from: :account, transform_with: -> (account) { account['referrence_id'] }
+       end
+     end
+   end
+diff --git a/adapters/reports/galactic_commerce/xml_adapter.rb b/adapters/reports/galactic_commerce/xml_adapter.rb
+index 95f4090..b6ffc77 100644
+--- a/adapters/reports/galactic_commerce/xml_adapter.rb
++++ b/adapters/reports/galactic_commerce/xml_adapter.rb
+@@ -1,7 +1,12 @@
+ module Adapters
+   module Reports
+     module GalacticCommerce
+-      class XmlAdapter < Hash
++      class XmlAdapter < Hashie::Trash
++        include Hashie::Extensions::IgnoreUndeclared
++        include Hashie::Extensions::SymbolizeKeys
++        include Hashie::Extensions::IndifferentAccess
++
++        property :id, from: :client_external_id
+       end
+     end
+   end
+diff --git a/services/report_fetcher.rb b/services/report_fetcher.rb
+index 5e29d74..3c60edf 100644
+--- a/services/report_fetcher.rb
++++ b/services/report_fetcher.rb
+@@ -7,6 +7,7 @@ require_relative '../adapters/reports/galactic_commerce/xml_adapter'
+ require 'csv'
+ 
+ # provides Hash.from_xml
++require 'active_support'
+ require 'active_support/core_ext'
+ 
+ require 'pry'
+@@ -62,11 +63,11 @@ class ReportFetcher
+   def report_adapter(format, body)
+     case format
+     when 'json'
+-      return JSON.load(body).map{|r| JsonAdapter[r] }
++      return JSON.load(body).map{|r| JsonAdapter.new r}
+     when 'csv'
+-      return CSV.parse(body, headers: true).map{|r| CsvAdapter[r] }
++      return CSV.parse(body, headers: true).map{|r| CsvAdapter.new r.to_hash }
+     when 'xml'
+-      return Hash.from_xml(body)['report']['transaction'].map { |r| XmlAdapter[r] }
++      return Hash.from_xml(body)['report']['transaction'].map { |r| XmlAdapter.new r }
+     else
+       raise StandardError.new("No Adapter available for format: #{format}")
+     end
+-- 
+2.34.1
+
+
+From 4001311a32ea5db0360b0993985b45f5ae6eb70a Mon Sep 17 00:00:00 2001
+From: Adan Alvarado <adan.alvarado7@gmail.com>
+Date: Thu, 30 Jun 2022 15:17:57 -0700
+Subject: [PATCH 4/4] Add explanation of further steps
+
+---
+ README-adan.md | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/README-adan.md b/README-adan.md
+index 876e1fc..1259bca 100644
+--- a/README-adan.md
++++ b/README-adan.md
+@@ -8,3 +8,9 @@ For next steps, An Adapter Pattern with the gem Hashie would work here.
+ - Install the Hashie gem. `bundler add hashie`
+ - Get the JSON response and initialize them with `Hashie::Mash`
+ - Create a class for each format type (json, xml, csv) that handles translating transactions into a common format for the ActiveRecord object that will store the results
++
++Steps to finish loading hashes to the database
++
++- With adapters in place, we can translate from other keys or deep keys via the transform_with option from Hashie
++- use the array of hashes and issue a `find_or_initialize_by` for each hash
++
+-- 
+2.34.1
+
