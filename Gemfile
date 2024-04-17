@@ -18,4 +18,5 @@ end
 group :development, :test do
   # Use SQLite for ActiveRecord
   gem 'sqlite3'
+  gem 'pry'
 end
