@@ -10,6 +10,7 @@ gem 'rspec'
 gem "byebug"
 gem "httparty"
 gem 'sidekiq'
+gem 'thread'
 
 group :production do
   # Use Postgresql for ActiveRecord
@@ -20,4 +21,5 @@ group :development, :test do
   # Use SQLite for ActiveRecord
   gem 'sqlite3'
   gem 'pry'
+  gem 'benchmark'
 end
