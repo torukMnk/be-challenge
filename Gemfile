@@ -9,6 +9,7 @@ gem 'rack-test'
 gem 'rspec'
 gem "byebug"
 gem "httparty"
+gem 'sidekiq'
 
 group :production do
   # Use Postgresql for ActiveRecord
