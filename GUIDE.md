@@ -9,3 +9,4 @@ Start time
 - Add ReportStrategyCsv and fixes
 - Thinking about unique constraint external_id error
 - Add sidekiq background processing
+- Add TransactionJob and Rules for unique constraint processing

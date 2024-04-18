@@ -8,7 +8,7 @@ module Utils
       details = Utils::ReportStrategy.for(reports.body, format, currency)
 
       details.each do |data|
-        Transaction.create(data)
+        TransactionJob.perform_async(data)
       end
     end
   end
