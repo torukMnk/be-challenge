@@ -4,6 +4,10 @@ module Utils
       case format
       when "json"
         Utils::ReportStrategyJson.filter(data, currency)
+      when "csv"
+        Utils::ReportStrategyCsv.filter(data, currency)
+      when "xml"
+        []
       else
         raise "Format not supported"
       end

@@ -6,3 +6,5 @@ Start time
 - Add Client to handle login authentication
 - Add pry gem for debuging
 - Add Report and Utils namespace Details, List, ReportStrategy
+- Add ReportStrategyCsv and fixes
+- Thinking about unique constraint external_id error

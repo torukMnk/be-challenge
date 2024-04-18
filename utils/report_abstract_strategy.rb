@@ -9,7 +9,7 @@ module Utils
       when 'paid'
         'PAID'
       when 'partial_refund'
-        'PARTIAL_REFUND'
+        'PARTIALLY_REFUNDED'
       end
     end
   end

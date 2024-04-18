@@ -5,7 +5,7 @@ module Utils
       format = report[:format]
       currency = report[:currency]
       reports = Client.new(:get).request("/reports/#{id}", {}, { Authorization: token })
-      details = Utils::ReportStrategy.for(reports, format, currency)
+      details = Utils::ReportStrategy.for(reports.body, format, currency)
 
       details.each do |data|
         Transaction.create(data)
