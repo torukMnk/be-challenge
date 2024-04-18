@@ -13,6 +13,8 @@ class Client
     case @method
     when :post
       self.class.post(endpoint(url), query: query, headers: headers.merge!(DEFAULT_HEADERS))
+    when :get
+      self.class.get(endpoint(url), query: query, headers: headers.merge!(DEFAULT_HEADERS))
     end
   end
 
