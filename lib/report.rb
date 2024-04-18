@@ -15,11 +15,10 @@ class Report
     raise AuthenticationError unless auth.code == 200
 
     token = auth.parsed_response['token']
-    reports = Client.new(:get).request("/reports", {}, { Authorization: token })
-    report_ids = reports.map { |r| r['report_id']}
+    reports = Utils::List.call(token)
 
-    report_ids.each do |report_id|
-      report = Client.new(:get).request("/reports/#{report_id}", {}, { Authorization: token })
+    reports.each do |report|
+      Utils::Details.call(token, report)
     end
   end
 end

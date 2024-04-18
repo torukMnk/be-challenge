@@ -5,3 +5,4 @@ Start time
 - Add httparty to handle http request
 - Add Client to handle login authentication
 - Add pry gem for debuging
+- Add Report and Utils namespace Details, List, ReportStrategy

@@ -10,6 +10,7 @@ set :database_file, '../config/database.yml'
 Dir["#{__dir__}/../models/*.rb"].each {|file| require file }
 
 Dir["#{__dir__}/../lib/*.rb"].each {|file| require file }
+Dir["#{__dir__}/../utils/*.rb"].each {|file| require file }
 
 logger = Logger.new(STDOUT)
 logger.formatter = proc do |severity, datetime, progname, msg|
