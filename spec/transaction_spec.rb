@@ -1,8 +1,4 @@
-ENV['APP_ENV'] = 'test'
-
-require './models/transaction'
-
-require 'rspec'
+require 'spec_helper'
 
 RSpec.describe 'Transaction' do
   after(:all) { Transaction.destroy_all}

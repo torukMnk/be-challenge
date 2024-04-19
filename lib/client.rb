@@ -21,7 +21,7 @@ class Client
   private
 
   def base_url
-    @base_url ||= ENV['API_BASE_URL'] || 'https://be-challenge-uqjcnl577q-pd.a.run.app/'
+    @base_url ||= ENV['API_BASE_URL'] || 'https://be-challenge-uqjcnl577q-pd.a.run.app'
   end
 
   def endpoint(url)

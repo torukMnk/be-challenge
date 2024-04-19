@@ -22,4 +22,7 @@ group :development, :test do
   gem 'sqlite3'
   gem 'pry'
   gem 'benchmark'
+  gem 'vcr'
+  gem 'webmock'
+  gem 'rspec-sidekiq'
 end
