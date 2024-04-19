@@ -1,4 +1,5 @@
 source "https://rubygems.org"
+ruby "2.7.8"
 
 gem "sinatra"
 gem 'sinatra-contrib'
@@ -7,6 +8,9 @@ gem "rake"  # so we can run Rake tasks
 gem 'rack-test'
 gem 'rspec'
 gem "byebug"
+gem "httparty"
+gem 'sidekiq'
+gem 'thread'
 
 group :production do
   # Use Postgresql for ActiveRecord
@@ -16,4 +20,9 @@ end
 group :development, :test do
   # Use SQLite for ActiveRecord
   gem 'sqlite3'
+  gem 'pry'
+  gem 'benchmark'
+  gem 'vcr'
+  gem 'webmock'
+  gem 'rspec-sidekiq'
 end
